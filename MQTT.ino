@@ -34,8 +34,8 @@
  
  
 // WIFI
-const char* SSID = "net virtua 1450 apto 701"; // SSID / nome da rede WI-FI que deseja se conectar
-const char* PASSWORD = "juniorlia1"; // Senha da rede WI-FI que deseja se conectar
+const char* SSID = "SSID"; // SSID / nome da rede WI-FI que deseja se conectar
+const char* PASSWORD = "SENHA"; // Senha da rede WI-FI que deseja se conectar
   
 // MQTT
 const char* BROKER_MQTT = "iot.eclipse.org"; //URL do broker MQTT que se deseja utilizar
