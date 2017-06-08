@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
  
-const char* ssid = "net virtua 1450 apto 701";
-const char* password = "juniorlia1";
+const char* ssid = "ssid";
+const char* password = "password";
 
 //defines - mapeamento de pinos do NodeMCU
 #define D0    16
@@ -18,6 +18,12 @@ const char* password = "juniorlia1";
 
 WiFiServer server(80);
 int presence;
+
+
+//Sensor de luz
+//int ledPin = D1; //Led no pino D1
+int ldrPin = 0; //LDR no pino analógico 
+int ldrValor = 0; //Valor lido do LDR
  
 void setup() {
   Serial.begin(115200);
@@ -27,6 +33,8 @@ void setup() {
   digitalWrite(D7, LOW);
 
   pinMode(D5, INPUT);
+
+  pinMode(D1, OUTPUT);
   
  
   // Connect to WiFi network
@@ -92,11 +100,18 @@ void loop() {
   } else  {
     presence = 1;
   }
+
+  //Função que controle sensor LDR
+  ldrValor = analogRead(ldrPin);
+  if(ldrValor > 500) {
+    digitalWrite(D1, HIGH);
+  } else  {
+    digitalWrite(D1, LOW);
+  }
+
+  Serial.print("LDR ");
+  Serial.println(ldrValor);
  
-// Set ledPin according to the request
-//digitalWrite(ledPin, value);
- 
-  // Return the response
   //Parte HTML
   client.println("HTTP/1.1 200 OK");
   //client.println("Content-Type: text/html");
@@ -152,6 +167,29 @@ void loop() {
   client.println("<a href=\"/LED=ON\"\"><button>Turn On </button></a>");
   client.println("<a href=\"/LED=OFF\"\"><button>Turn Off </button></a><br />");  
   client.println("</html>");
+
+  // Criação de caixa para apresentar o status do sensor de luz
+  client.println("<table width=\"280\" cellspacing=\"1\" cellpadding=\"3\" border=\"0\" bgcolor=\"#1E679A\"> ");
+  client.println("<tr> ");
+  client.println("<td><font color=\"#FFFFFF\" face=\"arial, verdana, helvetica\"> ");
+  client.println("<b>Status do sensor de luninosidade</b> ");
+  client.println("</font></td>");
+  client.println("</tr>");
+  client.println("<tr>");
+  client.println("<td bgcolor=\"#ffffcc\">"); 
+  client.println("<font face=\"arial, verdana, helvetica\">");
+  
+  if(ldrValor > 500) {
+    client.println("Led do LDR ligado!");
+  } else  {
+    client.println("Led do LDR desligado!");
+  }
+  
+  client.println("</font> ");
+  client.println("</td>");
+  client.println("</tr>");
+  client.println("</table> ");
+  
  
   delay(1);
   Serial.println("Client disconnected");
