@@ -1,7 +1,8 @@
 #include <ESP8266WiFi.h>
+#include <DHT.h>
  
-const char* ssid = "ssid";
-const char* password = "password";
+const char* ssid = "net virtua 1450 apto 701";
+const char* password = "juniorlia1";
 
 //defines - mapeamento de pinos do NodeMCU
 #define D0    16
@@ -16,14 +17,20 @@ const char* password = "password";
 #define D9    3
 #define D10   1
 
+//defines - DHT22
+#define DHTTYPE DHT22 // DHT 22 (AM2302)
+#define DHTPIN 4 // GPIo4 ou porta D2 do NodeMCU
+
 WiFiServer server(80);
 int presence;
 
+  //Sensor DHT22
+  DHT dht(DHTPIN, DHTTYPE,11); //Criação do objeto de leitura DHT
+  float t,h; //variáveis que armazenarão os valores lidos de temperatura e umidade;
 
-//Sensor de luz
-//int ledPin = D1; //Led no pino D1
-int ldrPin = 0; //LDR no pino analógico 
-int ldrValor = 0; //Valor lido do LDR
+  //Sensor de luz (LDR)
+  int ldrPin = 0; //LDR no pino analógico 
+  int ldrValor = 0; //Valor lido do LDR
  
 void setup() {
   Serial.begin(115200);
@@ -35,6 +42,8 @@ void setup() {
   pinMode(D5, INPUT);
 
   pinMode(D1, OUTPUT);
+
+  dht.begin(); //Inicia o sensor
   
  
   // Connect to WiFi network
@@ -96,14 +105,14 @@ void loop() {
 
   // Função que cuida do sensor de presença
   if (digitalRead(D5) == LOW) {
-    presence=0;
+    presence = 0;
   } else  {
     presence = 1;
   }
 
   //Função que controle sensor LDR
   ldrValor = analogRead(ldrPin);
-  if(ldrValor > 500) {
+  if(ldrValor > 500 & presence == 1) {
     digitalWrite(D1, HIGH);
   } else  {
     digitalWrite(D1, LOW);
@@ -111,7 +120,11 @@ void loop() {
 
   Serial.print("LDR ");
   Serial.println(ldrValor);
- 
+
+  //leitura dos sensores de temperatura e umidade
+  t=dht.readTemperature(); //Função de leitura da temperatura
+  h=dht.readHumidity();//Função de leitura da umidade
+  
   //Parte HTML
   client.println("HTTP/1.1 200 OK");
   //client.println("Content-Type: text/html");
@@ -179,7 +192,7 @@ void loop() {
   client.println("<td bgcolor=\"#ffffcc\">"); 
   client.println("<font face=\"arial, verdana, helvetica\">");
   
-  if(ldrValor > 500) {
+  if(ldrValor > 500 & presence == 1) {
     client.println("Led do LDR ligado!");
   } else  {
     client.println("Led do LDR desligado!");
@@ -189,9 +202,33 @@ void loop() {
   client.println("</td>");
   client.println("</tr>");
   client.println("</table> ");
+
+  //Criação de caixa para apresentar o status do sensor de temperatura e umidade
+  client.println("<table width=\"280\" cellspacing=\"1\" cellpadding=\"3\" border=\"0\" bgcolor=\"#1E679A\"> ");
+  client.println("<tr> ");
+  client.println("<td><font color=\"#FFFFFF\" face=\"arial, verdana, helvetica\"> ");
+  client.println("<b>Sensor de temperatura</b><br> ");
+  client.println("<b>Sensor de umidade</b> ");
+  client.println("</font></td>");
+  client.println("</tr>");
+  client.println("<tr>");
+  client.println("<td bgcolor=\"#ffffcc\">"); 
+  client.println("<font face=\"arial, verdana, helvetica\">");
+  client.println("Temperatura = ");
+  client.println(t);
+  client.println("°C<br>");
+  client.println("Umidade = ");
+  client.println(h);
+  client.println("%<br>");
+  client.println("</font> ");
+  client.println("</td>");
+  client.println("</tr>");
+  client.println("</table> ");
   
  
   delay(1);
+  Serial.println(t);
+  Serial.println(h);
   Serial.println("Client disconnected");
   Serial.println("");
  
